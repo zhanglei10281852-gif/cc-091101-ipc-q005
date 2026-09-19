@@ -11,6 +11,7 @@ void test_shared_memory_suite();
 void test_message_queue_suite();
 void test_signal_suite();
 void test_socket_suite();
+void test_supervisor_suite();
 
 int main(int argc, char* argv[]) {
     std::cout << std::endl;
@@ -25,6 +26,7 @@ int main(int argc, char* argv[]) {
     test::run_suite("Message Queue (消息队列)", test_message_queue_suite);
     test::run_suite("Signal (信号)", test_signal_suite);
     test::run_suite("Socket (Unix Domain Socket)", test_socket_suite);
+    test::run_suite("Supervisor (进程监管)", test_supervisor_suite);
     
     return test::print_summary();
 }

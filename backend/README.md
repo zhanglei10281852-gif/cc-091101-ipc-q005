@@ -15,6 +15,8 @@ make
 
 - 交互模式：`./ipc_demo`
 - 运行所有演示：`./ipc_demo --all`
+- Supervisor 进程监管模式：`./ipc_demo --supervisor [config-file]`
+  （详见 [SUPERVISOR.md](SUPERVISOR.md)，示例见 `examples/supervisor/`）
 
 ## 依赖
 

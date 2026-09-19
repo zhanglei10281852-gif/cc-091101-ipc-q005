@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y cmake && rm -rf /var/lib/apt/lists/*
 COPY CMakeLists.txt .
 COPY src/ src/
 COPY tests/ tests/
+COPY examples/ examples/
 
 # 编译主程序和测试
 RUN mkdir -p build && cd build && \
@@ -29,9 +30,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 从构建阶段复制可执行文件
 COPY --from=builder /app/build/ipc_demo /app/ipc_demo
 COPY --from=builder /app/build/tests/ipc_tests /app/ipc_tests
+COPY examples/ /app/examples/
 
 # 设置执行权限
-RUN chmod +x /app/ipc_demo /app/ipc_tests
+RUN chmod +x /app/ipc_demo /app/ipc_tests /app/examples/supervisor/*.sh
 
 # 创建启动脚本
 RUN echo '#!/bin/bash\n\
@@ -45,11 +47,16 @@ case "$1" in\n\
   interactive)\n\
     ./ipc_demo\n\
     ;;\n\
+  supervisor)\n\
+    shift\n\
+    ./ipc_demo --supervisor "${1:-examples/supervisor/supervisor.conf}"\n\
+    ;;\n\
   *)\n\
-    echo "Usage: docker run <image> [test|demo|interactive]"\n\
+    echo "Usage: docker run <image> [test|demo|interactive|supervisor [config]]"\n\
     echo "  test        - Run all test cases"\n\
     echo "  demo        - Run all IPC demonstrations"\n\
     echo "  interactive - Interactive menu mode"\n\
+    echo "  supervisor  - Run process supervisor (config file optional)"\n\
     echo ""\n\
     echo "Running demo by default..."\n\
     ./ipc_demo --all\n\

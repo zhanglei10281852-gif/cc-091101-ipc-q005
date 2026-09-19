@@ -15,10 +15,14 @@ set(TEST_SOURCES
     test_message_queue.cpp
     test_signal.cpp
     test_socket.cpp
+    test_supervisor.cpp
 )
 
 # 测试可执行文件
-add_executable(ipc_tests ${TEST_SOURCES})
+add_executable(ipc_tests ${TEST_SOURCES}
+    ${CMAKE_SOURCE_DIR}/src/supervisor/config_parser.cpp
+    ${CMAKE_SOURCE_DIR}/src/supervisor/supervisor.cpp
+)
 
 # 包含目录
 target_include_directories(ipc_tests PRIVATE 

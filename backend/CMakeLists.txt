@@ -17,6 +17,8 @@ set(SOURCES
     src/ipc/message_queue_demo.cpp
     src/ipc/signal_demo.cpp
     src/ipc/socket_demo.cpp
+    src/supervisor/config_parser.cpp
+    src/supervisor/supervisor.cpp
 )
 
 # 可执行文件

@@ -55,6 +55,15 @@ make
 5. **信号 (Signal)** - 异步通知机制
 6. **Socket (Unix Domain Socket)** - 本地套接字通信
 
+此外提供 **Supervisor 进程监管模式**（运维培训）：从配置文件启动命名
+子进程并输出 JSON 结构化事件，演示进程退出、崩溃、卡死的接管、退避
+重启与热加载，详见 [`backend/SUPERVISOR.md`](backend/SUPERVISOR.md)。
+
+```bash
+# 前台运行 supervisor（Ctrl+C 或 kill -TERM 有序关停，kill -HUP 热加载）
+./ipc_demo --supervisor examples/supervisor/supervisor.conf
+```
+
 ---
 
 ## Docker 详细使用指南
@@ -132,7 +141,7 @@ docker system prune -f
 
 ## 测试用例说明
 
-项目包含 **41 个测试用例**，覆盖所有 IPC 方式：
+项目包含 **50 个测试用例**，覆盖所有 IPC 方式及 supervisor 进程监管：
 
 ### Pipe (管道) - 5 个用例
 
@@ -205,6 +214,18 @@ docker system prune -f
 | socket_nonblocking       | 测试非阻塞 socket     |
 | socket_bidirectional     | 测试双向通信          |
 
+### Supervisor (进程监管) - 9 个用例（事件驱动，不依赖固定 sleep）
+
+| 测试名                          | 说明                                       |
+| ------------------------------- | ------------------------------------------ |
+| supervisor_burst_reap           | 信号突发：多进程同时退出全部回收、无僵尸   |
+| supervisor_backoff              | 崩溃按指数退避重启，重试耗尽永久失败       |
+| supervisor_reload_invalid       | 非法热加载被拒绝、旧服务不受影响后再生效   |
+| supervisor_shutdown_order       | 先优雅信号后强杀卡死服务的关停顺序         |
+| supervisor_stable_reset         | 稳定运行达阈值后失败计数清零               |
+| config_parser_valid/invalid/empty | 配置解析字段、非法输入拒绝、空文件与缺文件 |
+| config_bad_startup_exit_code    | 启动时非法配置退出码为 2                   |
+
 ---
 
 ## 项目结构
@@ -220,14 +241,20 @@ docker system prune -f
     ├── src/
     │   ├── main.cpp        # 主程序入口
     │   ├── include/
-    │   │   └── ipc_demo.h  # 头文件
-    │   └── ipc/
-    │       ├── pipe_demo.cpp           # 管道演示
-    │       ├── named_pipe_demo.cpp     # 命名管道演示
-    │       ├── shared_memory_demo.cpp  # 共享内存演示
-    │       ├── message_queue_demo.cpp  # 消息队列演示
-    │       ├── signal_demo.cpp         # 信号演示
-    │       └── socket_demo.cpp         # Socket 演示
+    │   │   ├── ipc_demo.h  # 头文件
+    │   │   └── supervisor.h  # supervisor 模式接口
+    │   ├── ipc/
+    │   │   ├── pipe_demo.cpp           # 管道演示
+    │   │   ├── named_pipe_demo.cpp     # 命名管道演示
+    │   │   ├── shared_memory_demo.cpp  # 共享内存演示
+    │   │   ├── message_queue_demo.cpp  # 消息队列演示
+    │   │   ├── signal_demo.cpp         # 信号演示
+    │   │   └── socket_demo.cpp         # Socket 演示
+    │   └── supervisor/
+    │       ├── config_parser.cpp       # supervisor 配置解析
+    │       ├── supervisor.cpp          # 进程监管主循环（self-pipe 信号）
+    │       └── signal_util.h           # 信号名/编号转换
+    ├── examples/supervisor/            # supervisor 示例配置与脚本
     └── tests/
         ├── CMakeLists.txt          # 测试构建配置
         ├── test_framework.h        # 测试框架
@@ -237,7 +264,8 @@ docker system prune -f
         ├── test_shared_memory.cpp  # 共享内存测试
         ├── test_message_queue.cpp  # 消息队列测试
         ├── test_signal.cpp         # 信号测试
-        └── test_socket.cpp         # Socket 测试
+        ├── test_socket.cpp         # Socket 测试
+        └── test_supervisor.cpp     # Supervisor 集成测试
 ```
 
 ---
