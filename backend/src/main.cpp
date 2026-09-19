@@ -1,16 +1,18 @@
 /**
  * C++ 进程间通信 (IPC) 演示程序
- * 
- * 本程序演示了 6 种主要的 IPC 方式：
+ *
+ * 本程序演示了 7 种主要的进程/信号管理场景：
  * 1. 管道 (Pipe)
  * 2. 命名管道 (Named Pipe / FIFO)
  * 3. 共享内存 (Shared Memory)
  * 4. 消息队列 (Message Queue)
  * 5. 信号 (Signal)
  * 6. Socket (Unix Domain Socket)
+ * 7. Supervisor 进程监管（退出/崩溃/卡死接管）
  */
 
 #include "ipc_demo.h"
+#include "supervisor.h"
 
 void print_menu() {
     std::cout << "\n\033[35m╔════════════════════════════════════════════╗\033[0m" << std::endl;
@@ -23,54 +25,67 @@ void print_menu() {
     std::cout << "\033[35m║  5. 信号 (Signal)                          ║\033[0m" << std::endl;
     std::cout << "\033[35m║  6. Socket (Unix Domain Socket)            ║\033[0m" << std::endl;
     std::cout << "\033[35m║  7. 运行所有演示                           ║\033[0m" << std::endl;
+    std::cout << "\033[35m║  8. Supervisor 进程监管演示                ║\033[0m" << std::endl;
     std::cout << "\033[35m║  0. 退出                                   ║\033[0m" << std::endl;
     std::cout << "\033[35m╚════════════════════════════════════════════╝\033[0m" << std::endl;
-    std::cout << "\n请选择 (0-7): ";
+    std::cout << "\n请选择 (0-8): ";
 }
 
 void run_all_demos() {
     ipc::Logger::demo("运行所有 IPC 演示");
-    
+
     ipc::demo_pipe();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     ipc::demo_named_pipe();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     ipc::demo_shared_memory();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     ipc::demo_message_queue();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     ipc::demo_signal();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     ipc::demo_socket();
-    
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    ipc::demo_supervisor();
+
     ipc::Logger::info("MAIN", "所有演示完成！");
 }
 
 int main(int argc, char* argv[]) {
+    // Supervisor 模式：ipc_demo --supervisor --config <file>
+    if (argc > 1 && std::string(argv[1]) == "--supervisor") {
+        return sv::run_supervisor(argc, argv);
+    }
+
     // 如果有命令行参数 --all，直接运行所有演示
     if (argc > 1 && std::string(argv[1]) == "--all") {
         run_all_demos();
         return 0;
     }
-    
+
     int choice;
-    
+
     while (true) {
         print_menu();
         std::cin >> choice;
-        
+
         if (std::cin.fail()) {
+            if (std::cin.eof()) {
+                ipc::Logger::info("MAIN", "输入结束，退出！");
+                return 0;
+            }
             std::cin.clear();
             std::cin.ignore(10000, '\n');
             ipc::Logger::warn("MAIN", "无效输入，请输入数字");
             continue;
         }
-        
+
         switch (choice) {
             case 0:
                 ipc::Logger::info("MAIN", "程序退出，再见！");
@@ -96,10 +111,13 @@ int main(int argc, char* argv[]) {
             case 7:
                 run_all_demos();
                 break;
+            case 8:
+                ipc::demo_supervisor();
+                break;
             default:
-                ipc::Logger::warn("MAIN", "无效选择，请输入 0-7");
+                ipc::Logger::warn("MAIN", "无效选择，请输入 0-8");
         }
     }
-    
+
     return 0;
 }

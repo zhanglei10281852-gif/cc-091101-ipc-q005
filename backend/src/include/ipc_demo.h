@@ -50,6 +50,7 @@ void demo_shared_memory();
 void demo_message_queue();
 void demo_signal();
 void demo_socket();
+void demo_supervisor();
 
 } // namespace ipc
 

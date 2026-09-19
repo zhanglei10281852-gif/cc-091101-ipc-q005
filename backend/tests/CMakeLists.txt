@@ -15,15 +15,24 @@ set(TEST_SOURCES
     test_message_queue.cpp
     test_signal.cpp
     test_socket.cpp
+    test_supervisor.cpp
 )
 
 # 测试可执行文件
 add_executable(ipc_tests ${TEST_SOURCES})
 
+# 监管器/受控子进程：端到端测试直接拉起这两个真实二进制
+add_dependencies(ipc_tests ipc_supervisor ipc_worker)
+
 # 包含目录
-target_include_directories(ipc_tests PRIVATE 
+target_include_directories(ipc_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/src/include
     ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# 让测试在运行时能找到同目录构建出的 ipc_supervisor / ipc_worker
+target_compile_definitions(ipc_tests PRIVATE
+    IPC_BINARY_DIR="${CMAKE_BINARY_DIR}"
 )
 
 # 链接库
